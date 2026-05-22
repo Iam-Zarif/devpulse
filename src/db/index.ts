@@ -1,9 +1,11 @@
 import { Pool } from "pg";
 import config from "../config";
 
-export const pool = new Pool({
-  connectionString: config.connection_string,
-});
+const poolConfig = config.connection_string
+  ? { connectionString: config.connection_string }
+  : {};
+
+export const pool = new Pool(poolConfig);
 
 export const initDB = async () => {
   try {
@@ -37,6 +39,6 @@ export const initDB = async () => {
 
     console.log("Database Initialized");
   } catch (error) {
-    console.log("db error", error);
+    console.error("db error", error);
   }
 };
