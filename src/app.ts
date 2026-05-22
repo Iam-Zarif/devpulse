@@ -9,6 +9,7 @@ import { issueRouter } from "./modules/issues/issue.route";
 import globalErrorHandler from "./middleware/globalErrorHandler";
 import sendResponse from "./utils/sendResponse";
 import AppError from "./utils/AppError";
+import { metricsRouter } from "./modules/metrics/metrics.route";
 
 const app: Application = express();
 const allowedOrigins = [
@@ -26,13 +27,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// cors
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  }),
-);
 
 // root route
 app.get("/", (req: Request, res: Response) => {
@@ -45,9 +39,7 @@ app.get("/", (req: Request, res: Response) => {
 // routes
 app.use("/api/auth", authRouter);
 app.use("/api/issues", issueRouter);
-
-// future routes
-// app.use("/api/metrics", metricsRouter);
+app.use("/api/metrics", metricsRouter);
 
 // not found route
 app.use((req: Request, res: Response) => {
