@@ -9,6 +9,7 @@ import { issueRouter } from "./modules/issues/issue.route";
 import globalErrorHandler from "./middleware/globalErrorHandler";
 import sendResponse from "./utils/sendResponse";
 import AppError from "./utils/AppError";
+import catchAsync from "./utils/catchAsync";
 import { metricsRouter } from "./modules/metrics/metrics.route";
 
 const app: Application = express();
@@ -27,14 +28,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// cors
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  }),
-);
-
 // root route
 app.get("/", (req: Request, res: Response) => {
   sendResponse(res, {
@@ -49,13 +42,15 @@ app.use("/api/issues", issueRouter);
 app.use("/api/metrics", metricsRouter);
 
 // not found route
-app.use((req: Request, res: Response) => {
-  throw new AppError(
-    404,
-    "Route not found",
-    `${req.method} ${req.originalUrl} not found`,
-  );
-});
+app.use(
+  catchAsync(async (req: Request, res: Response) => {
+    throw new AppError(
+      404,
+      "Route not found",
+      `${req.method} ${req.originalUrl} not found`,
+    );
+  }),
+);
 
 app.use(globalErrorHandler);
 

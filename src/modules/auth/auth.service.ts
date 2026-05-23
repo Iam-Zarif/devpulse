@@ -2,19 +2,20 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../../db";
 import config from "../../config";
+import AppError from "../../utils/AppError";
 import type { LoginPayload, SignupPayload, UserRole } from "./auth.types";
 
 const signupUserIntoDB = async (payload: SignupPayload) => {
   const { name, email, password, role = "contributor" } = payload;
 
   if (!name || !email || !password) {
-    throw new Error("Name, email and password are required");
+    throw new AppError(400, "Name, email and password are required");
   }
 
   const allowedRoles: UserRole[] = ["contributor", "maintainer"];
 
   if (!allowedRoles.includes(role)) {
-    throw new Error("Role must be contributor or maintainer");
+    throw new AppError(400, "Role must be contributor or maintainer");
   }
 
   const existingUser = await pool.query(
@@ -26,7 +27,7 @@ const signupUserIntoDB = async (payload: SignupPayload) => {
   );
 
   if (existingUser.rows.length > 0) {
-    throw new Error("Email already exists");
+    throw new AppError(400, "Email already exists");
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
@@ -47,7 +48,7 @@ const loginUserFromDB = async (payload: LoginPayload) => {
   const { email, password } = payload;
 
   if (!email || !password) {
-    throw new Error("Email and password are required");
+    throw new AppError(400, "Email and password are required");
   }
 
   const userResult = await pool.query(
@@ -60,7 +61,7 @@ const loginUserFromDB = async (payload: LoginPayload) => {
   );
 
   if (userResult.rows.length === 0) {
-    throw new Error("Invalid email or password");
+    throw new AppError(401, "Invalid email or password");
   }
 
   const user = userResult.rows[0];
@@ -68,7 +69,7 @@ const loginUserFromDB = async (payload: LoginPayload) => {
   const isPasswordMatched = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMatched) {
-    throw new Error("Invalid email or password");
+    throw new AppError(401, "Invalid email or password");
   }
 
   const jwtPayload = {
